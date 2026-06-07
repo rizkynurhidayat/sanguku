@@ -57,6 +57,11 @@ class TransactionController extends Controller
             // Transcribe audio to text
             $transcript = $this->sttService->transcribe($absolutePath);
 
+            // Normalize Indonesian number words to digits
+            if (!empty($transcript)) {
+                $transcript = \App\Services\TextToNumberService::convert($transcript);
+            }
+
             // Clean up temporary audio file
             if (file_exists($absolutePath)) {
                 unlink($absolutePath);

@@ -470,10 +470,12 @@
             font-weight: 500;
             transition: background-color 0.2s;
             min-height: 44px; /* Touch target minimum */
+            /* display: inline-flex; */
+            margin-left: 50px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
+            width: 80%;
         }
 
         .btn-delete:hover {
@@ -701,6 +703,7 @@
                 padding: 0.25rem 0.5rem;
                 border-radius: 0.375rem;
                 font-size: 0.85rem;
+                margin-left: 0px;
                 min-height: auto;
                 width: auto;
                 display: inline-block;
