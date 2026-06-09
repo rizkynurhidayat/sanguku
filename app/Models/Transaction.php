@@ -11,7 +11,9 @@ class Transaction extends Model
         'type',
         'amount',
         'description',
-        'transaction_date'
+        'transaction_date',
+        'category_group',
+        'sub_category'
     ];
 
     protected $casts = [

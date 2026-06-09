@@ -198,10 +198,11 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 20%">Tanggal</th>
-                    <th style="width: 15%">Tipe</th>
-                    <th style="width: 45%">Keterangan Transaksi</th>
-                    <th style="width: 20%">Nominal</th>
+                    <th style="width: 15%">Tanggal</th>
+                    <th style="width: 12%">Tipe</th>
+                    <th style="width: 23%">Kategori</th>
+                    <th style="width: 35%">Keterangan Transaksi</th>
+                    <th style="width: 15%">Nominal</th>
                 </tr>
             </thead>
             <tbody>
@@ -212,6 +213,14 @@
                             <span class="badge badge-{{ $trx->type }}">
                                 {{ $trx->type == 'income' ? 'Pemasukan' : 'Pengeluaran' }}
                             </span>
+                        </td>
+                        <td>
+                            @if($trx->category_group)
+                                <strong>{{ $trx->sub_category }}</strong><br>
+                                <span style="font-size: 8px; color: #64748b;">({{ $trx->category_group }})</span>
+                            @else
+                                <span style="color: #94a3b8;">-</span>
+                            @endif
                         </td>
                         <td>"{{ $trx->description }}"</td>
                         <td class="{{ $trx->type == 'income' ? 'income-color' : 'expense-color' }}" style="font-weight: bold;">

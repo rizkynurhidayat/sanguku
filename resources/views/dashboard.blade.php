@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-primary: #0b0f19;
@@ -470,16 +472,39 @@
             font-weight: 500;
             transition: background-color 0.2s;
             min-height: 44px; /* Touch target minimum */
-            /* display: inline-flex; */
-            margin-left: 50px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 80%;
+            width: auto;
+            flex-grow: 1;
         }
 
         .btn-delete:hover {
             background-color: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-edit {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            min-height: 44px; /* Touch target minimum */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            flex-grow: 1;
+           
+            
+        }
+
+        .btn-edit:hover {
+            background-color: rgba(56, 189, 248, 0.25);
         }
 
         .empty-state {
@@ -713,6 +738,23 @@
                 background-color: rgba(239, 68, 68, 0.1);
             }
 
+            .btn-edit {
+                background: transparent;
+                border: none;
+                color: var(--color-primary);
+                padding: 0.25rem 0.5rem;
+                border-radius: 0.375rem;
+                font-size: 0.85rem;
+                min-height: auto;
+                width: auto;
+                display: inline-block;
+                cursor: pointer;
+            }
+
+            .btn-edit:hover {
+                background-color: var(--color-primary-glow);
+            }
+
             .toast {
                 left: auto;
                 right: 2rem;
@@ -724,7 +766,238 @@
             .toast-message {
                 font-size: 0.9rem;
             }
-        }    font-weight: 500;
+        }
+
+        /* Category Chart Styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: start;
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        .chart-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            margin: 1rem auto 1.5rem auto;
+        }
+
+        .chart-legend {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .legend-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            padding: 0.65rem 0.85rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .legend-label-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-value-group {
+            text-align: right;
+        }
+
+        .legend-percentage {
+            font-weight: 600;
+        }
+
+        .legend-target {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(17, 24, 39, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            padding: 1.75rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            text-align: left;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group input, 
+        .form-group select {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 10px var(--color-primary-glow);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.75rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.25rem;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.65rem 1.25rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+            border: none;
+            color: white;
+            padding: 0.65rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
         }
     </style>
 </head>
@@ -785,29 +1058,99 @@
             </div>
         </section>
 
-        <!-- Voice Recorder Component -->
-        <section class="recorder-section">
-            <div class="recorder-title">Catat Transaksi Baru</div>
-            <div class="recorder-subtitle">Ketuk mikrofon di bawah dan katakan transaksi Anda. Contoh: <br><strong>"Membeli bensin 20000"</strong> atau <strong>"Mendapatkan gaji bulanan 5000000"</strong>.</div>
-            
-            <div id="statusBadge" class="status-badge">Menunggu instruksi...</div>
+        <!-- Dashboard Grid: Recorder & Category Allocation Chart -->
+        <div class="dashboard-grid">
+            <!-- Voice Recorder Component -->
+            <section class="recorder-section" style="margin-bottom: 0; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; padding: 2rem 1.25rem;">
+                <div class="recorder-title">Catat Transaksi Baru</div>
+                <div class="recorder-subtitle">Ketuk mikrofon di bawah dan katakan transaksi Anda. Contoh: <br><strong>"Membeli bensin 20000"</strong> atau <strong>"Mendapatkan gaji bulanan 5000000"</strong>. pastikan untuk <strong>"DOUBLE CHECK"</strong> hasilnya.</div>
+                
+                <div id="statusBadge" class="status-badge">Menunggu instruksi...</div>
 
-            <!-- Wave Visualizer Simulation -->
-            <div id="visualizer" class="visualizer-container">
-                <div class="wave-bar" style="animation-duration: 0.4s"></div>
-                <div class="wave-bar" style="animation-duration: 0.5s"></div>
-                <div class="wave-bar" style="animation-duration: 0.3s"></div>
-                <div class="wave-bar" style="animation-duration: 0.6s"></div>
-                <div class="wave-bar" style="animation-duration: 0.4s"></div>
-                <div class="wave-bar" style="animation-duration: 0.5s"></div>
-                <div class="wave-bar" style="animation-duration: 0.3s"></div>
-                <div class="wave-bar" style="animation-duration: 0.4s"></div>
-            </div>
+                <!-- Wave Visualizer Simulation -->
+                <div id="visualizer" class="visualizer-container">
+                    <div class="wave-bar" style="animation-duration: 0.4s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.5s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.3s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.6s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.4s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.5s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.3s"></div>
+                    <div class="wave-bar" style="animation-duration: 0.4s"></div>
+                </div>
 
-            <button id="recordBtn" class="btn-record">
-                <span id="recordIcon">🎙️</span>
-            </button>
-        </section>
+                <button id="recordBtn" class="btn-record" style="margin-bottom: 0;">
+                    <span id="recordIcon">🎙️</span>
+                </button>
+            </section>
+
+            <!-- Category Chart Section -->
+            <section class="chart-section" style="height: 100%; box-sizing: border-box; padding: 2rem 1.25rem;">
+                <h2 class="section-title" style="margin-bottom: 0.5rem; font-size: 1.15rem; font-weight: 600;">Alokasi Pengeluaran</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); text-align: center; margin-bottom: 0.5rem;">
+                    Pantau target alokasi anggaran (50/30/20) Anda.
+                </p>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <div class="legend-label-group">
+                            <span class="legend-color-dot" style="background-color: #38bdf8;"></span>
+                            <div>
+                                <div style="font-weight: 500;">Needs (Kebutuhan)</div>
+                                <span class="legend-target">Target: 50%</span>
+                            </div>
+                        </div>
+                        <div class="legend-value-group">
+                            <div class="legend-percentage" id="needsPercent">0%</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Rp {{ number_format($needsSum, 0, ',', '.') }}</div>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-label-group">
+                            <span class="legend-color-dot" style="background-color: #f43f5e;"></span>
+                            <div>
+                                <div style="font-weight: 500;">Wants (Keinginan)</div>
+                                <span class="legend-target">Target: 30%</span>
+                            </div>
+                        </div>
+                        <div class="legend-value-group">
+                            <div class="legend-percentage" id="wantsPercent">0%</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Rp {{ number_format($wantsSum, 0, ',', '.') }}</div>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-label-group">
+                            <span class="legend-color-dot" style="background-color: #10b981;"></span>
+                            <div>
+                                <div style="font-weight: 500;">Savings (Investasi)</div>
+                                <span class="legend-target">Target: 20%</span>
+                            </div>
+                        </div>
+                        <div class="legend-value-group">
+                            <div class="legend-percentage" id="savingsPercent">0%</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">Rp {{ number_format($savingsSum, 0, ',', '.') }}</div>
+                        </div>
+                    </div>
+                    @if($otherSum > 0)
+                        <div class="legend-item">
+                            <div class="legend-label-group">
+                                <span class="legend-color-dot" style="background-color: #9ca3af;"></span>
+                                <div>
+                                    <div style="font-weight: 500;">Lainnya</div>
+                                    <span class="legend-target">Tanpa Kategori</span>
+                                </div>
+                            </div>
+                            <div class="legend-value-group">
+                                <div class="legend-percentage" id="otherPercent">0%</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Rp {{ number_format($otherSum, 0, ',', '.') }}</div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </section>
+        </div>
 
         <!-- History Table -->
         <section class="history-section">
@@ -822,6 +1165,7 @@
                             <tr>
                                 <th>Tanggal</th>
                                 <th>Tipe</th>
+                                <th>Kategori</th>
                                 <th>Keterangan (Hasil Suara)</th>
                                 <th>Nominal</th>
                                 <th>Aksi</th>
@@ -842,6 +1186,16 @@
                                             {{ $trx->type == 'income' ? 'Pemasukan' : 'Pengeluaran' }}
                                         </span>
                                     </td>
+                                    <td data-label="Kategori">
+                                        @if($trx->category_group)
+                                            <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);">{{ $trx->sub_category }}</div>
+                                            <span class="badge" style="font-size: 0.65rem; padding: 0.15rem 0.4rem; background: {{ $trx->category_group == 'Needs' ? 'var(--color-primary-glow)' : ($trx->category_group == 'Wants' ? 'var(--color-expense-glow)' : 'var(--color-income-glow)') }}; color: {{ $trx->category_group == 'Needs' ? 'var(--color-primary)' : ($trx->category_group == 'Wants' ? 'var(--color-expense)' : 'var(--color-income)') }}; border: 1px solid rgba(255, 255, 255, 0.05);">
+                                                {{ $trx->category_group }}
+                                            </span>
+                                        @else
+                                            <span style="opacity: 0.5;">-</span>
+                                        @endif
+                                    </td>
                                     <td data-label="Keterangan">
                                         <div class="desc-text" title="{{ $trx->description }}">
                                             "{{ $trx->description }}"
@@ -853,11 +1207,14 @@
                                         </span>
                                     </td>
                                     <td data-label="Aksi">
-                                        <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?')" style="width: 100%;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-delete" title="Hapus Transaksi">🗑️ Hapus</button>
-                                        </form>
+                                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; ">
+                                            <button type="button" class="btn-edit" onclick="openEditModal({{ json_encode($trx) }})" title="Edit Transaksi">✏️ Edit</button>
+                                            <form action="{{ route('transactions.destroy', $trx->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus transaksi ini?')" style="margin: 0; display: inline-block;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-delete" title="Hapus Transaksi">🗑️ Hapus</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -871,6 +1228,64 @@
                 @endif
             </div>
         </section>
+    </div>
+
+    <!-- Edit Transaction Modal -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 style="font-size: 1.25rem; font-weight: 600; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Edit Transaksi</h3>
+                <button type="button" class="modal-close-btn" onclick="closeEditModal()">✕</button>
+            </div>
+            <form id="editForm" method="POST" action="">
+                @csrf
+                @method('PUT')
+                
+                <div class="form-group">
+                    <label for="editDescription">Keterangan Transaksi</label>
+                    <input type="text" id="editDescription" name="description" placeholder="Contoh: Beli nasi goreng" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editAmount">Nominal (Rp)</label>
+                        <input type="number" id="editAmount" name="amount" placeholder="0" required min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editType">Tipe Transaksi</label>
+                        <select id="editType" name="type" required>
+                            <option value="expense">Pengeluaran</option>
+                            <option value="income">Pemasukan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editCategoryGroup">Kelompok Anggaran</label>
+                        <select id="editCategoryGroup" name="category_group" onchange="updateSubCategoryOptions()">
+                            <option value="Needs">Needs (Kebutuhan Utama)</option>
+                            <option value="Wants">Wants (Keinginan)</option>
+                            <option value="Savings">Savings (Investasi)</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editSubCategory">Sub Kategori</label>
+                        <select id="editSubCategory" name="sub_category">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditModal()">Batal</button>
+                    <button type="submit" class="btn-save">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Toast Alert Container -->
@@ -982,6 +1397,148 @@
                 statusBadge.className = 'status-badge';
                 showToast('Gagal mengirim audio ke server.', 'error');
             }
+        }
+
+        // Chart.js Category Allocation Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            const needsSum = {{ $needsSum }};
+            const wantsSum = {{ $wantsSum }};
+            const savingsSum = {{ $savingsSum }};
+            const otherSum = {{ $otherSum }};
+            const totalExpense = needsSum + wantsSum + savingsSum + otherSum;
+
+            // Calculate percentages dynamically
+            if (totalExpense > 0) {
+                document.getElementById('needsPercent').textContent = ((needsSum / totalExpense) * 100).toFixed(1) + '%';
+                document.getElementById('wantsPercent').textContent = ((wantsSum / totalExpense) * 100).toFixed(1) + '%';
+                document.getElementById('savingsPercent').textContent = ((savingsSum / totalExpense) * 100).toFixed(1) + '%';
+                const otherEl = document.getElementById('otherPercent');
+                if (otherEl) {
+                    otherEl.textContent = ((otherSum / totalExpense) * 100).toFixed(1) + '%';
+                }
+            }
+
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            let chartData, chartLabels, chartColors;
+            
+            if (totalExpense === 0) {
+                // Empty state dataset
+                chartData = [1];
+                chartLabels = ['Belum ada pengeluaran'];
+                chartColors = ['rgba(156, 163, 175, 0.15)'];
+            } else {
+                chartData = [needsSum, wantsSum, savingsSum, otherSum];
+                chartLabels = ['Needs (Kebutuhan)', 'Wants (Keinginan)', 'Savings (Investasi)', 'Lainnya'];
+                chartColors = [
+                    '#38bdf8', // Emerald Blue
+                    '#f43f5e', // Rose
+                    '#10b981', // Emerald
+                    '#9ca3af'  // Gray
+                ];
+            }
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (totalExpense === 0) return 'Belum ada data';
+                                    const value = context.raw;
+                                    const percentage = ((value / totalExpense) * 100).toFixed(1);
+                                    return `${context.label}: Rp ${new Intl.NumberFormat('id-ID').format(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        });
+
+        // Sub-categories Mapping for Edit Modal
+        const subCategoriesMap = {
+            'Needs': [
+                'Makan & Minum',
+                'Transportasi & Kendaraan',
+                'Tagihan & Kebutuhan Rumah/Kos',
+                'Pendidikan / Kerja'
+            ],
+            'Wants': [
+                'Nongkrong & Hiburan',
+                'Belanja & Self-Reward',
+                'Sosial & Jajan'
+            ],
+            'Savings': [
+                'Tabungan & Investasi',
+                'Dana Darurat'
+            ],
+            'Lainnya': [
+                'Belum Dikategorikan'
+            ]
+        };
+
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+        const editDescription = document.getElementById('editDescription');
+        const editAmount = document.getElementById('editAmount');
+        const editType = document.getElementById('editType');
+        const editCategoryGroup = document.getElementById('editCategoryGroup');
+        const editSubCategory = document.getElementById('editSubCategory');
+
+        function openEditModal(transaction) {
+            editDescription.value = transaction.description;
+            editAmount.value = Math.round(transaction.amount);
+            editType.value = transaction.type;
+            editCategoryGroup.value = transaction.category_group || 'Lainnya';
+            
+            // Set action URL dynamically
+            editForm.action = `/transactions/${transaction.id}`;
+            
+            // Populate sub-category dropdown based on the category group
+            updateSubCategoryOptions(transaction.sub_category);
+            
+            // Show modal
+            editModal.classList.add('show');
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove('show');
+        }
+
+        function updateSubCategoryOptions(selectedSubCategory = null) {
+            const group = editCategoryGroup.value;
+            const subs = subCategoriesMap[group] || [];
+            
+            // Clear current options
+            editSubCategory.innerHTML = '';
+            
+            // Populate options
+            subs.forEach(sub => {
+                const option = document.createElement('option');
+                option.value = sub;
+                option.textContent = sub;
+                if (selectedSubCategory && sub.toLowerCase() === selectedSubCategory.toLowerCase()) {
+                    option.selected = true;
+                }
+                editSubCategory.appendChild(option);
+            });
         }
     </script>
 </body>

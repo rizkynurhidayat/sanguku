@@ -14,6 +14,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', [TransactionController::class, 'index'])->name('dashboard');
     Route::post('/transactions/voice', [TransactionController::class, 'storeVoice'])->name('transactions.voice');
+    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
     Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
     Route::get('/transactions/export', [TransactionController::class, 'exportPdf'])->name('transactions.export');
     

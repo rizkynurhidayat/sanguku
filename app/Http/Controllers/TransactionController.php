@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transaction;
 use App\Services\SpeechToTextService;
+use App\Services\CategoryClassifierService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -13,10 +14,12 @@ use Exception;
 class TransactionController extends Controller
 {
     protected SpeechToTextService $sttService;
+    protected CategoryClassifierService $classifier;
 
-    public function __construct(SpeechToTextService $sttService)
+    public function __construct(SpeechToTextService $sttService, CategoryClassifierService $classifier)
     {
         $this->sttService = $sttService;
+        $this->classifier = $classifier;
     }
 
     /**
@@ -31,7 +34,37 @@ class TransactionController extends Controller
         $totalExpense = Transaction::where('user_id', Auth::id())->where('type', 'expense')->sum('amount');
         $netBalance = $totalIncome - $totalExpense;
 
-        return view('dashboard', compact('transactions', 'totalIncome', 'totalExpense', 'netBalance'));
+        // Calculate category allocation breakdown
+        $needsSum = Transaction::where('user_id', Auth::id())
+            ->where('category_group', 'Needs')
+            ->sum('amount');
+
+        $wantsSum = Transaction::where('user_id', Auth::id())
+            ->where('category_group', 'Wants')
+            ->sum('amount');
+
+        $savingsSum = Transaction::where('user_id', Auth::id())
+            ->where('category_group', 'Savings')
+            ->sum('amount');
+
+        $otherSum = Transaction::where('user_id', Auth::id())
+            ->where('type', 'expense')
+            ->where(function ($query) {
+                $query->where('category_group', 'Lainnya')
+                    ->orWhereNull('category_group');
+            })
+            ->sum('amount');
+
+        return view('dashboard', compact(
+            'transactions', 
+            'totalIncome', 
+            'totalExpense', 
+            'netBalance', 
+            'needsSum', 
+            'wantsSum', 
+            'savingsSum', 
+            'otherSum'
+        ));
     }
 
     /**
@@ -85,12 +118,17 @@ class TransactionController extends Controller
                 ], 422);
             }
 
+            // Classify category based on transcript
+            $categoryData = $this->classifier->classify($transcript);
+
             // Save to database
             $transaction = Transaction::create([
                 'user_id' => Auth::id(),
                 'type' => $parsedData['type'],
                 'amount' => $parsedData['amount'],
                 'description' => $transcript,
+                'category_group' => $categoryData['group'],
+                'sub_category' => $categoryData['sub_category'],
                 'transaction_date' => now()
             ]);
 
@@ -120,6 +158,34 @@ class TransactionController extends Controller
 
         $transaction->delete();
         return redirect()->route('dashboard')->with('success', 'Transaksi berhasil dihapus.');
+    }
+
+    /**
+     * Update a transaction
+     */
+    public function update(Request $request, Transaction $transaction)
+    {
+        if ($transaction->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'amount' => 'required|numeric|min:0.01',
+            'type' => 'required|in:income,expense',
+            'category_group' => 'nullable|string|max:50',
+            'sub_category' => 'nullable|string|max:50',
+        ]);
+
+        $transaction->update([
+            'description' => $request->description,
+            'amount' => $request->amount,
+            'type' => $request->type,
+            'category_group' => $request->category_group ?: 'Lainnya',
+            'sub_category' => $request->sub_category ?: 'Belum Dikategorikan',
+        ]);
+
+        return redirect()->route('dashboard')->with('success', 'Transaksi berhasil diperbarui.');
     }
 
     /**
